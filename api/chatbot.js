@@ -1,22 +1,37 @@
-export async function sendMessageToBot(message) {
+import OpenAI from "openai";
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método no permitido" });
+  }
+
   try {
-    const response = await fetch(
-      "https://backend-vercel-six-kappa.vercel.app/api/chatbot", 
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
-      }
-    );
+    const { message } = req.body;
 
-    const data = await response.json();
+    if (!message) {
+      return res.status(400).json({ error: "Mensaje no recibido" });
+    }
 
-    return data.reply || "No obtuve respuesta del servidor.";
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
 
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Eres un chatbot útil." },
+        { role: "user", content: message },
+      ],
+    });
+
+    const reply = completion.choices[0].message.content;
+
+    return res.status(200).json({ reply });
   } catch (error) {
-    console.log("Error al conectar con el chatbot:", error);
-    return "Hubo un error al comunicar con el servidor.";
+    console.error("Error en chatbot:", error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+      details: error.message,
+    });
   }
 }
