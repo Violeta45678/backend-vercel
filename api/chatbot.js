@@ -1,6 +1,6 @@
-import OpenAI from "openai";
+const OpenAI = require("openai");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
   }
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "Eres un chatbot útil." },
+        { role: "system", content: "Eres un asistente útil." },
         { role: "user", content: message },
       ],
     });
@@ -34,4 +34,4 @@ export default async function handler(req, res) {
       details: error.message,
     });
   }
-}
+};
